@@ -22,7 +22,7 @@ CART <- function(formula, data, weights = NULL, subset = NULL, ...)
         }
         else
         {
-            data$sb <- subset
+            # data$sb <- subset
             result <- tree::tree(formula, data = data, subset = data$sb, model = TRUE, ...)
         }
     }
@@ -32,9 +32,9 @@ CART <- function(formula, data, weights = NULL, subset = NULL, ...)
             result <- tree::tree(formula, data = data, weights = weights, model = TRUE, ...)
         else
         {
-            print("dog")
-            data$sb <- subset
-            result <- tree::tree(formula, data = data, subset = data$sb,
+            # print("dog")
+            # data$sb <- subset
+            result <- tree::tree(formula, data = data, subset = subset,
                            weights = weights, model = TRUE, ...)
         }
     }
@@ -62,11 +62,13 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
     model <- tree$model
     assigned <- tree$where
     .terminalNode <- function(i) frame$var[i] == frame$var[nrow(frame)]
+
     # generate two hash tables that maps output of factor predictor to a meaningful string
     # e.g. a factor output variable with 3 levels: c("Much Better","Average","Much Worse")
     # this function converts words to an abbreviation, and generates a hash table with
     # keys = c("Much Better","Average","Much Worse"), so that "a" -> "MuBe", "b" -> "Ave",
     # "c" -> "MuWo"
+
     .getNodeHash <- function(tree.attri)
     {
         .appendNum <- function(text, text.hash, c) {
@@ -248,6 +250,14 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
         terminal.description <- paste0("; Mean = ",FormatAsReal(frame$yval)) # Change 2
     }
 
+    ## create tooltip
+    if (class(frame$n) == "integer")
+        node.tooltips = paste("n:", frame$n)
+    else
+        node.tooltips = paste("n:", FormatAsReal(frame$n, digits = 1, format = "f"))
+    node.descriptions = paste("Description: ", node.descriptions)
+    node.tooltips = paste(node.tooltips, node.descriptions, sep = "<br>")
+
     root.name <- outcome.name
     .constructNodeName <- function(node, i, i.parent, frame, tree.hash)
     {
@@ -296,7 +306,7 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
         i <- match(node, nodes)
         result <- list(name = .constructNodeName(node, i, i.parent, frame, tree.hash),
                       n = frame$n[i], Percentage = FormatAsPercent(frame$n[i]/frame$n[1], digits = 1),
-                      id = node, Description = node.descriptions[i], color = node.color[i])
+                      id = node, Description = node.descriptions[i], tooltip = node.tooltips[i], color = node.color[i])
         if((node * 2) %in% nodes) { # Adding child nodes, if they exist.
             result$children = vector("list", 2)
             for (branch in 1:2)
@@ -328,7 +338,7 @@ print.CART <- function(x, ...)
 {
     tree.list <- treeFrameToList(x, custom.color = TRUE)
     plt <- sankeytreeR::sankeytree(tree.list, value = "n", nodeHeight = 100,
-        tooltip = c("n", "Description"), treeColors = TRUE, legend = TRUE)
+        tooltip = "tooltip", treeColors = TRUE, legend = TRUE)
     print(plt)
 }
 
