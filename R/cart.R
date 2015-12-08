@@ -251,7 +251,8 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
     }
 
     ## create tooltip
-    if (class(frame$n) == "integer")
+    ## check integer
+    if (min(abs(c(frame$n %%1, frame$n %%1-1))) < 0.000001)
         node.tooltips = paste("n:", frame$n)
     else
         node.tooltips = paste("n:", FormatAsReal(frame$n, digits = 1, format = "f"))
