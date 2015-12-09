@@ -63,12 +63,8 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
     assigned <- tree$where
     .terminalNode <- function(i) frame$var[i] == frame$var[nrow(frame)]
 
-    # generate two hash tables that maps output of factor predictor to a meaningful string
-    # e.g. a factor output variable with 3 levels: c("Much Better","Average","Much Worse")
-    # this function converts words to an abbreviation, and generates a hash table with
-    # keys = c("Much Better","Average","Much Worse"), so that "a" -> "MuBe", "b" -> "Ave",
-    # "c" -> "MuWo"
-
+    # This function shortens categories to an abbreviation by spliting strings
+    # and then generates hash tables to facilitate uniqueness checking and searching, etc.
     .getNodeHash <- function(tree.attri)
     {
         .appendNum <- function(text, text.hash, c) {
@@ -127,7 +123,21 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
         result = list(features.hash,xlevels.hash)
     }
 
-    tree.hash = .getNodeHash(attri)
+    tree.hash <- .getNodeHash(attri)
+    categoryLegend <- NULL
+    xlevels <- attri$xlevels
+    xlevels.fac <- xlevels[!sapply(xlevels, is.null)]
+    if (length(xlevels.fac) != 0) {
+        hash.l = hash::values(tree.hash[[1]])
+        categoryLegend = rep("", length(hash.l))
+        for (i in 1:length(hash.l)) {
+            categoryShort = hash::values(tree.hash[[2]][[i]])
+            categoryShort = paste(categoryShort, xlevels.fac[[i]], sep = ":")
+            categoryShort = paste(categoryShort, collapse = "; ")
+            categoryLegend[i] = paste0(names(xlevels.fac)[i], ": ", categoryShort)
+        }
+    }
+
     #.trim = function(string) ifelse(nchar(string) >  max.tooltip.length, paste(0,strtrim(string, max.tooltip.length),"..."), string)
     nms = names(tree$where)
     outcome.variable = tree$model[,1]
@@ -331,6 +341,12 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
         }
         names(tree.list)[1:2] = c("legendColor","legendText")
     }
+
+    if (!is.null(categoryLegend)) {
+        tree.list <- c(list(categoryLegend), tree.list)
+        names(tree.list)[1] <- "categoryLegend"
+    }
+
     tree.list
 }
 
@@ -339,7 +355,7 @@ print.CART <- function(x, ...)
 {
     tree.list <- treeFrameToList(x, custom.color = TRUE)
     plt <- sankeytreeR::sankeytree(tree.list, value = "n", nodeHeight = 100,
-        tooltip = "tooltip", treeColors = TRUE, legend = TRUE)
+        tooltip = "tooltip", treeColors = TRUE, colorLegend = TRUE, categoryLegend = TRUE)
     print(plt)
 }
 
