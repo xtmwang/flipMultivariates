@@ -191,7 +191,7 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
                 node.color[i] <- ""
             }
         }
-        terminal.description <- paste(" Highest =",frame$yval) # Change 1
+        terminal.description <- paste("Highest =",frame$yval) # Change 1
     }
     else
     { # Regression tree.
@@ -257,9 +257,14 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
             }
         }
 
-        terminal.description <- paste0("; Mean = ",FormatAsReal(frame$yval)) # Change 2
+        terminal.description <- paste0("Mean = ",FormatAsReal(frame$yval)) # Change 2
     }
 
+    ## create terminal description
+    for (i in 1:nrow(frame)) {
+        if (!.terminalNode(i))
+            terminal.description[i] = "";
+    }
     ## create tooltip
     ## check integer
     if (min(abs(c(frame$n %%1, frame$n %%1-1))) < 0.000001)
@@ -306,8 +311,8 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
             node.name <- paste(nd.txt, collapse = " ")
             node.name <- paste0(variable.name, ": ", node.name)
         }
-        if (.terminalNode(i))
-            node.name <- paste0(node.name, terminal.description[i])
+#         if (.terminalNode(i))
+#             node.name <- paste0(node.name, terminal.description[i])
         node.name
     }
     # Function for creating a recursive list.
@@ -317,7 +322,9 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
         i <- match(node, nodes)
         result <- list(name = .constructNodeName(node, i, i.parent, frame, tree.hash),
                       n = frame$n[i], Percentage = FormatAsPercent(frame$n[i]/frame$n[1], digits = 1),
-                      id = node, Description = node.descriptions[i], tooltip = node.tooltips[i], color = node.color[i])
+                      id = node, Description = node.descriptions[i],
+                      tooltip = node.tooltips[i], color = node.color[i],
+                      terminalDescription = terminal.description[i])
         if((node * 2) %in% nodes) { # Adding child nodes, if they exist.
             result$children = vector("list", 2)
             for (branch in 1:2)
@@ -355,7 +362,7 @@ print.CART <- function(x, ...)
 {
     tree.list <- treeFrameToList(x, custom.color = TRUE)
     plt <- sankeytreeR::sankeytree(tree.list, value = "n", nodeHeight = 100,
-        tooltip = "tooltip", treeColors = TRUE, colorLegend = TRUE, categoryLegend = TRUE)
+        tooltip = "tooltip", treeColors = TRUE, colorLegend = TRUE, categoryLegend = TRUE, terminalDescription = TRUE)
     print(plt)
 }
 
