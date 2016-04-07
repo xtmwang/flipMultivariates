@@ -361,7 +361,7 @@ treeFrameToList <- function(tree, max.tooltip.length = 150, show.whole.factor = 
 print.CART <- function(x, ...)
 {
     tree.list <- treeFrameToList(x, custom.color = TRUE)
-    plt <- sankeytreeR::sankeytree(tree.list, value = "n", nodeHeight = 100,
+    plt <- rhtmlSankeyTree::rhtmlSankeyTree(tree.list, value = "n", nodeHeight = 100,
         tooltip = "tooltip", treeColors = TRUE, colorLegend = TRUE, categoryLegend = TRUE, terminalDescription = TRUE)
     print(plt)
 }
